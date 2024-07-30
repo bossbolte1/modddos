@@ -242,4 +242,4 @@ def handle_bgmi(message):
 Example: /bgmi example.com 80 60'''
             bot.reply_to(message, response)
     else:
-        response = "You are not authorized
+        response = "You are not authorized"
