@@ -8,7 +8,7 @@ import datetime
 import os
 
 # Insert your Telegram bot token here
-bot = telebot.TeleBot('7204994987:AAEk4YMjvEZYa1nXuN3q1KySqjbnT6IpHVI')
+bot = telebot.TeleBot('YOUR_TELEGRAM_BOT_TOKEN')
 
 # Admin user IDs
 admin_id = ["1375408229"]
@@ -227,4 +227,19 @@ def handle_bgmi(message):
             bgmi_cooldown[user_id] = datetime.datetime.now()
 
         command = message.text.split()
-        if len(command) == 4:  # Updated to accept target, time, and
+        if len(command) == 4:  # Ensure command is complete
+            target = command[1]
+            port = command[2]
+            time = command[3]
+
+            # Log the command
+            record_command_logs(user_id, "/bgmi", target, port, time)
+
+            # Start attack reply
+            start_attack_reply(message, target, port, time)
+        else:
+            response = '''Usage: /bgmi <target> <port> <time>
+Example: /bgmi example.com 80 60'''
+            bot.reply_to(message, response)
+    else:
+        response = "You are not authorized
