@@ -232,4 +232,4 @@ def handle_bgmi(message):
             else:
                 record_command_logs(user_id, '/bgmi', target, port, time)
                 log_command(user_id, target, port, time)
-                start_attack_reply(message, target, port
+                start_attack_reply(message, target, port)
